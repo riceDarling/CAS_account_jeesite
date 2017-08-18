@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.erp.dao.AccountSupplierDao">
+    
+<sql id="accountSupplierColumns">
+		a.id AS "id",
+		a.suppliernum AS "suppliernum",
+		a.supplier AS "supplier",
+		a.address AS "address",
+		a.category AS "category",
+		a.linkman AS "linkman",
+		a.phone AS "phone",
+		a.weixin AS "weixin",
+		a.qq AS "qq",
+		a.license AS "license",
+		a.certificate AS "certificate",
+		a.credit AS "credit",
+		a.deadline AS "deadline",
+		a.information AS "information",
+		a.bank AS "bank",
+		a.supplycategory AS "supplycategory",
+		a.banknum AS "banknum",
+		a.maker AS "maker",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="accountSupplierJoins">
+		LEFT JOIN sys_user u18 ON u18.id = a.maker
+	</sql>
+    
+	<select id="get" resultType="AccountSupplier">
+		SELECT 
+			<include refid="accountSupplierColumns"/>
+		FROM account_supplier a
+		<include refid="accountSupplierJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="AccountSupplier">
+		SELECT 
+			<include refid="accountSupplierColumns"/>
+		FROM account_supplier a
+		<include refid="accountSupplierJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="AccountSupplier">
+		SELECT 
+			<include refid="accountSupplierColumns"/>
+		FROM account_supplier a
+		<include refid="accountSupplierJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO account_supplier(
+			id,
+			suppliernum,
+			supplier,
+			address,
+			category,
+			linkman,
+			phone,
+			weixin,
+			qq,
+			license,
+			certificate,
+			credit,
+			deadline,
+			information,
+			bank,
+			supplycategory,
+			banknum,
+			maker,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{suppliernum},
+			#{supplier},
+			#{address},
+			#{category},
+			#{linkman},
+			#{phone},
+			#{weixin},
+			#{qq},
+			#{license},
+			#{certificate},
+			#{credit},
+			#{deadline},
+			#{information},
+			#{bank},
+			#{supplycategory},
+			#{banknum},
+			#{maker},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE account_supplier SET 	
+			suppliernum = #{suppliernum},
+			supplier = #{supplier},
+			address = #{address},
+			category = #{category},
+			linkman = #{linkman},
+			phone = #{phone},
+			weixin = #{weixin},
+			qq = #{qq},
+			license = #{license},
+			certificate = #{certificate},
+			credit = #{credit},
+			deadline = #{deadline},
+			information = #{information},
+			bank = #{bank},
+			supplycategory = #{supplycategory},
+			banknum = #{banknum},
+			maker = #{maker},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE account_supplier SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	<select id="getAccountSupplierByName" resultType="AccountSupplier">
+		SELECT 
+			<include refid="accountSupplierColumns"/>
+		FROM account_supplier a
+		<include refid="accountSupplierJoins"/>
+		WHERE a.supplier = #{supplier}
+	</select>
+		
+	<select id="getAccountSupplierBysupplierNum" resultType="AccountSupplier">
+		SELECT 
+			<include refid="accountSupplierColumns"/>
+		FROM account_supplier a
+		<include refid="accountSupplierJoins"/>
+		WHERE a.supplierNum = #{supplierNum}
+	</select>
+	
+</mapper>

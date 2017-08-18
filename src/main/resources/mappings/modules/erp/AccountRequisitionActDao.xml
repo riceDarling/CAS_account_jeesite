@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.erp.dao.AccountRequisitionActDao">
+
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="com.thinkgem.jeesite.modules.erp.entity.AccountRequisitionAct">
+		INSERT INTO account_requisition_act(
+			requisition_id,
+			requisition_name,
+			checker_name,
+			start_time,
+			state,
+			actindex,
+			step
+		) VALUES (
+			#{requisitionId},
+			#{requisitionName},
+			#{checkerName},
+			#{startTime},
+			#{state},
+			#{actindex},
+			#{step}
+		)
+	</insert>
+	
+	<update id="update" parameterType="com.thinkgem.jeesite.modules.erp.entity.AccountRequisitionAct">
+		UPDATE account_requisition_act SET 	
+			requisition_id = #{requisitionId},
+			requisition_name = #{requisitionName},
+			checker_name=#{checkerName},
+			start_time = #{startTime},
+			state = #{state},
+			actindex=#{actindex},
+			end_time = #{endTime},
+			conclusion = #{conclusion},
+			remarks = #{remarks},
+			step = #{step}
+		WHERE id = #{id}
+	</update>
+	 
+	<select id="getbyRequisitionIdAndChecknameAndState" resultType="com.thinkgem.jeesite.modules.erp.entity.AccountRequisitionAct" parameterType="com.thinkgem.jeesite.modules.erp.entity.AccountRequisitionAct">
+			SELECT 
+			*
+			FROM account_requisition_act a 
+			WHERE a.requisition_id = #{requisitionId}
+			AND a.checker_name=#{checkerName}
+			AND a.state=0
+	</select>
+	
+	<select id="getbyRequisitionId" resultType="map" parameterType="string">
+			SELECT 
+			a.*,b.`name` requisitionName,c.`name` checkerName
+		FROM account_requisition_act a 
+		LEFT JOIN sys_user b ON a.requisition_name=b.id
+		LEFT JOIN sys_user c ON a.checker_name=c.id
+		WHERE a.requisition_id = #{requisitionId}
+	</select>
+	
+	<select id="findList" resultType="map" parameterType="com.thinkgem.jeesite.modules.erp.entity.AccountRequisitionAct">
+	SELECT  b.title,b.id,a.start_time,b.proc_ins_id,a.actindex,a.id AS aid 
+		FROM account_requisition_act a 
+		LEFT JOIN account_requisition b ON a.requisition_id=b.id
+		WHERE a.checker_name=#{checkerName}
+		AND state=#{state}
+		AND a.actindex=0
+		GROUP BY b.id
+		UNION
+		SELECT b.title,b.id,a.start_time,b.proc_ins_id,a.actindex,a.id AS aid 
+		FROM account_requisition_act a 
+		LEFT JOIN account_purchase b ON a.requisition_id=b.id
+		WHERE a.checker_name=#{checkerName}
+		AND state=#{state}
+		AND a.actindex=1
+		GROUP BY b.id
+		<where>
+			
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY aid DESC
+			</when>
+			<otherwise>
+				ORDER BY aid DESC
+			</otherwise>
+		</choose>
+		
+	</select>
+	
+	<delete id="deleteByRequisitionId" parameterType="string">
+		DELETE FROM account_requisition_act WHERE requisition_id=#{requisitionId}
+	</delete>
+</mapper>

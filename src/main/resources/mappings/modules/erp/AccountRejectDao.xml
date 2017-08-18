@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.erp.dao.AccountRejectDao">
+    
+	<sql id="accountRejectColumns">
+		a.id AS "id",
+		a.ordernum AS "ordernum",
+		a.warehouse AS "warehouse",
+		a.materialname AS "materialname",
+		a.size AS "size",
+		a.ingredient AS "ingredient",
+		a.quantity AS "quantity",
+		a.locationcode AS "locationcode",
+		a.batch AS "batch",
+		a.supplier AS "supplier",
+		a.purchasenum AS "purchasenum",
+		a.arrivalnum AS "arrivalnum",
+		a.maker AS "maker",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="accountRejectJoins">
+	</sql>
+    
+	<select id="get" resultType="AccountReject">
+		SELECT 
+			<include refid="accountRejectColumns"/>
+		FROM account_reject a
+		<include refid="accountRejectJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="AccountReject">
+		SELECT 
+			<include refid="accountRejectColumns"/>
+		FROM account_reject a
+		<include refid="accountRejectJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="ordernum != null and ordernum != ''">
+				AND a.ordernum = #{ordernum}
+			</if>
+			<if test="warehouse != null and warehouse != ''">
+				AND a.warehouse = #{warehouse}
+			</if>
+			<if test="materialname != null and materialname != ''">
+				AND a.materialname = #{materialname}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="AccountReject">
+		SELECT 
+			<include refid="accountRejectColumns"/>
+		FROM account_reject a
+		<include refid="accountRejectJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO account_reject(
+			id,
+			ordernum,
+			warehouse,
+			materialname,
+			size,
+			ingredient,
+			quantity,
+			locationcode,
+			batch,
+			supplier,
+			purchasenum,
+			arrivalnum,
+			maker,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{ordernum},
+			#{warehouse},
+			#{materialname},
+			#{size},
+			#{ingredient},
+			#{quantity},
+			#{locationcode},
+			#{batch},
+			#{supplier},
+			#{purchasenum},
+			#{arrivalnum},
+			#{maker},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE account_reject SET 	
+			ordernum = #{ordernum},
+			warehouse = #{warehouse},
+			materialname = #{materialname},
+			size = #{size},
+			ingredient = #{ingredient},
+			quantity = #{quantity},
+			locationcode = #{locationcode},
+			batch = #{batch},
+			supplier = #{supplier},
+			purchasenum = #{purchasenum},
+			arrivalnum = #{arrivalnum},
+			maker = #{maker},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE account_reject SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<select id="rate" resultType="AccountRejectTotalRejectRate">
+	<!-- SELECT am.materialNum AS materialcode,am.materialName AS materialname,am.size AS materialsize,
+		COUNT(ap.quantity) AS purchasecount,COUNT(ar.quantity) AS receiptcount
+	FROM account_material am LEFT JOIN account_purchase ap ON am.materialNum=ap.materialCode
+	LEFT JOIN account_reject ar ON ap.purchaseNum=ar.purchaseNum
+	LEFT JOIN account_supplier acs ON acs.suppliernum=ap.supplierCode -->
+	SELECT 
+	  am.materialNum AS materialcode,
+	  am.materialName AS materialname,
+	  am.size AS materialsize,
+	  COUNT(apd.quantity) AS purchasecount,
+	  COUNT(ar.quantity) AS receiptcount 
+	FROM
+	  account_material am 
+	  LEFT JOIN account_supplier_material ams 
+	    ON am.`materialNum` = ams.materialNum 
+	  LEFT JOIN account_purchase_detail apd 
+	    ON am.materialNum = apd.materialCode 
+	  LEFT JOIN account_purchase ap 
+	    ON ap.`id` = apd.`parent_Id` 
+	  LEFT JOIN account_reject ar 
+	    ON ap.purchaseNum = ar.purchaseNum 
+	  LEFT JOIN account_supplier acs 
+	    ON acs.suppliernum = apd.supplierCode 
+	<where>
+			<if test="beginDate != null and beginDate != ''">
+				AND am.create_date &gt; #{beginDate}
+			</if>
+			<if test="endDate != null and endDate != ''">
+				AND am.create_date &lt; #{endDate}
+			</if>
+			<if test="suppliercode != null and suppliercode != ''">
+				AND acs.suppliernum LIKE  CONCAT('%', #{suppliercode}, '%')
+			</if>
+			<if test="supplier != null and supplier != ''">
+				AND acs.supplier LIKE  CONCAT('%', #{supplier}, '%')
+			</if>
+		</where>
+	GROUP BY materialCode
+	</select>
+	
+	
+	<select id="rateSuppliers" resultType="AccountRejectTotalRejectRateSuppliers">
+	<!-- SELECT acs.suppliernum AS suppliercode,acs.supplier AS supplier,
+		COUNT(ap.quantity) AS purchasecount,COUNT(ar.quantity) AS receiptcount
+	FROM account_supplier acs LEFT JOIN account_purchase ap ON acs.suppliernum=ap.supplierCode
+	LEFT JOIN account_reject ar ON ap.purchaseNum=ar.purchaseNum
+	LEFT JOIN account_material am ON am.materialNum=ap.materialCode -->
+	SELECT 
+	  acs.suppliernum AS suppliercode,
+	  acs.supplier AS supplier,
+	  COUNT(apd.quantity) AS purchasecount,
+	  COUNT(ar.quantity) AS receiptcount 
+	FROM
+	  account_supplier acs 
+	  LEFT JOIN account_purchase_detail apd 
+	    ON acs.suppliernum = apd.supplierCode 
+	  LEFT JOIN account_purchase ap
+	    ON ap.`id` = apd.`parent_Id`
+	  LEFT JOIN account_reject ar 
+	    ON ap.purchaseNum = ar.purchaseNum 
+	  LEFT JOIN account_material am 
+	    ON am.materialNum = apd.materialCode 
+		<where>
+			<if test="beginDate != null and beginDate != ''">
+				AND ap.create_date &gt; #{beginDate}
+			</if>
+			<if test="endDate != null and endDate != ''">
+				AND ap.create_date &lt; #{endDate}
+			</if>
+			<if test="materialcode != null and materialcode != ''">
+				AND am.materialNum LIKE  CONCAT('%', #{materialcode}, '%')
+			</if>
+			<if test="materialname != null and materialname != ''">
+				AND am.materialName LIKE  CONCAT('%', #{materialname}, '%')
+			</if>
+			<if test="materialsize != null and materialsize != ''">
+				AND am.size LIKE  CONCAT('%', #{materialsize}, '%')
+			</if>
+		</where>
+		GROUP BY suppliercode
+	</select>
+	
+	
+	<select id="moneyCount" resultType="AccountRejectTotalCount">
+	<!-- SELECT am.materialNum AS materialcode,am.materialName AS materialname,am.size AS materialsize,
+		SUM(ap.quantity) AS purchasesum,ap.totalMoney AS purchasemoney,SUM(ar.quantity) AS receiptsum,(am.priceFee*SUM(ar.quantity)) AS receiptmoney
+	FROM account_material am LEFT JOIN account_purchase ap ON am.materialNum=ap.materialCode
+	LEFT JOIN account_reject ar ON ap.purchaseNum=ar.purchaseNum
+	LEFT JOIN account_supplier acs ON acs.suppliernum=ap.supplierCode -->
+	SELECT 
+	  am.materialNum AS materialcode,
+	  am.materialName AS materialname,
+	  am.size AS materialsize,
+	  SUM(apd.quantity) AS purchasesum,
+	  ap.totalMoney AS purchasemoney,
+	  SUM(ar.quantity) AS receiptsum,
+	  (ams.priceFee * SUM(ar.quantity)) AS receiptmoney 
+	FROM
+	  account_material am 
+	  LEFT JOIN account_supplier_material ams
+	    ON am.`materialNum` = ams.materialNum
+	  LEFT JOIN account_purchase_detail apd
+	    ON am.materialNum = apd.materialCode 
+	  LEFT JOIN account_purchase ap 
+	    ON ap.`id` = apd.`parent_Id`
+	  LEFT JOIN account_reject ar 
+	    ON ap.purchaseNum = ar.purchaseNum 
+	  LEFT JOIN account_supplier acs 
+	    ON acs.suppliernum = apd.supplierCode 
+	<where>
+		<if test="beginDate != null and beginDate != ''">
+				AND am.create_date &gt; #{beginDate}
+			</if>
+			<if test="endDate != null and endDate != ''">
+				AND am.create_date &lt; #{endDate}
+			</if>
+			<if test="suppliercode != null and suppliercode != ''">
+				AND acs.suppliernum LIKE  CONCAT('%', #{suppliercode}, '%')
+			</if>
+			<if test="supplier != null and supplier != ''">
+				AND acs.supplier LIKE  CONCAT('%', #{supplier}, '%')
+			</if>
+		</where>
+	GROUP BY materialCode
+	</select>
+	
+	<select id="moneyCountSuppliers" resultType="AccountRejectTotalCountSuppliers">
+	<!-- SELECT acs.suppliernum AS suppliercode,acs.supplier AS supplier,
+		SUM(ap.quantity) AS purchasesum,ap.totalMoney AS purchasemoney,SUM(ar.quantity) AS receiptsum,(am.priceFee*SUM(ar.quantity)) AS receiptmoney
+	FROM account_supplier acs LEFT JOIN account_purchase ap ON acs.suppliernum=ap.supplierCode
+		LEFT JOIN account_reject ar ON ap.purchaseNum=ar.purchaseNum
+		LEFT JOIN account_material am ON am.materialNum=ap.materialCode -->
+		SELECT 
+		  acs.suppliernum AS suppliercode,
+		  acs.supplier AS supplier,
+		  SUM(apd.quantity) AS purchasesum,
+		  ap.totalMoney AS purchasemoney,
+		  SUM(ar.quantity) AS receiptsum,
+		  (ams.priceFee * SUM(ar.quantity)) AS receiptmoney 
+		FROM
+		  account_supplier acs 
+		  LEFT JOIN account_purchase_detail apd
+		    ON acs.suppliernum = apd.supplierCode 
+		  LEFT JOIN account_purchase ap 
+		    ON ap.`id` = apd.`parent_Id` 
+		  LEFT JOIN account_reject ar 
+		    ON ap.purchaseNum = ar.purchaseNum 
+		  LEFT JOIN account_material am 
+		    ON am.materialNum = apd.materialCode 
+		  LEFT JOIN account_supplier_material ams
+		    ON am.`materialNum` = ams.materialNum
+	<where>
+			<if test="beginDate != null and beginDate != ''">
+				AND ap.create_date &gt; #{beginDate}
+			</if>
+			<if test="endDate != null and endDate != ''">
+				AND ap.create_date &lt; #{endDate}
+			</if>
+			<if test="materialcode != null and materialcode != ''">
+				AND am.materialNum LIKE  CONCAT('%', #{materialcode}, '%')
+			</if>
+			<if test="materialname != null and materialname != ''">
+				AND am.materialName LIKE  CONCAT('%', #{materialname}, '%')
+			</if>
+			<if test="materialsize != null and materialsize != ''">
+				AND am.size LIKE  CONCAT('%', #{materialsize}, '%')
+			</if>
+		</where>
+		GROUP BY suppliercode
+	</select>
+	
+</mapper>

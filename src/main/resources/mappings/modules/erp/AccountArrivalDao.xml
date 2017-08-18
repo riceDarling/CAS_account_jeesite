@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.erp.dao.AccountArrivalDao">
+    
+	<sql id="accountArrivalColumns">
+		a.id AS "id",
+		a.contract_id AS "contractId",
+		a.material_id AS "materialId",
+		a.arrival_date AS "arrivalDate",
+		a.tobe_num AS "tobeNum",
+		a.arrival_num AS "arrivalNum",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="accountContractColumns">
+		a.id AS "id",
+		a.contractnum AS "contractnum",
+		a.contracttitle AS "contracttitle",
+		a.purchasenum AS "purchasenum",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="accountArrivalJoins">
+	</sql>
+    
+	<select id="get" resultType="AccountArrival">
+		SELECT 
+			<include refid="accountArrivalColumns"/>,
+			ac.contractTitle,am.materialName
+		FROM account_arrival a
+		<include refid="accountArrivalJoins"/>
+		LEFT JOIN account_contract ac 
+		  ON a.`contract_id` = ac.`id`
+		LEFT JOIN account_material am
+		  ON a.`material_id` = am.`id`
+		WHERE a.`contract_id` = #{id}
+		GROUP BY a.`arrival_date`
+	</select>
+	<select id="getNextForm" resultType="AccountArrival">
+		SELECT 
+		  <include refid="accountArrivalColumns"/>,
+		  ac.`contractTitle`,
+		  ap.`id`,
+		  asp.`supplier` 
+		FROM
+		  account_arrival a,
+		  account_contract ac,
+		  account_purchase ap,
+		  account_purchase_detail apd,
+		  account_supplier asp 
+		WHERE  
+		  	a.`contract_id` = ac.`id` 
+		  AND ac.`purchaseNum` = ap.`orderNum` 
+		  AND ap.`id` = apd.`parent_Id` 
+		  AND apd.`supplierCode` = asp.`supplierNum` 
+		  AND a.`contract_id` = #{contractId}
+		GROUP BY a.`arrival_date` DESC
+	</select>
+	<select id="getLastForm" resultType="AccountArrival">
+		SELECT 
+		  <include refid="accountArrivalColumns"/>,
+		  am.materialName,
+		  am.size,
+		  ac.`contractTitle` 
+		FROM
+		  account_arrival a,
+		  account_material am,
+		  account_contract ac 
+		WHERE a.`material_id` = am.`id` 
+		  AND a.`contract_id` = ac.`id`
+		  AND a.contract_id = #{contractId} 
+		  AND a.arrival_date = #{arrivalDate}
+		  GROUP BY a.material_id 
+	</select>
+	
+	<select id="findList" resultType="AccountArrival">
+		SELECT 
+		  <include refid="accountArrivalColumns"/>,
+		  ac.contractTitle,
+		  am.materialName,
+		  ac.status,
+		  asp.`supplier` 
+		FROM
+		  account_arrival a,
+		  account_contract ac,
+		  account_material am,
+		  account_purchase ap,
+		  account_purchase_detail apd,
+		  account_supplier asp 
+		WHERE a.`contract_id` = ac.`id` 
+		  AND a.`material_id` = am.`id` 
+		  AND ac.`purchaseNum` = ap.`orderNum` 
+		  AND ap.id = apd.`parent_Id` 
+		  AND apd.`supplierCode` = asp.supplierNum 
+		<if test="contractTitle != null and contractTitle != ''">
+			and ac.contractTitle like CONCAT(CONCAT('%',#{contractTitle}),'%')
+		</if>
+		<if test="supplier != null and supplier != ''">
+			and asp.supplier like CONCAT(CONCAT('%',#{supplier}),'%')
+		</if>
+		<if test="status != null and status != ''">
+			and ac.status = #{status}
+		</if>
+		GROUP BY a.`contract_id` 
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.arrival_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="AccountArrival">
+		SELECT 
+			<include refid="accountArrivalColumns"/>
+		FROM account_arrival a
+		<include refid="accountArrivalJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO account_arrival(
+			id,
+			contract_id,
+			material_id,
+			arrival_date,
+			tobe_num,
+			arrival_num,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{contractId},
+			#{materialId},
+			#{arrivalDate},
+			#{tobeNum},
+			#{arrivalNum},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE account_arrival SET 	
+			contract_id = #{contractId},
+			material_id = #{materialId},
+			arrival_date = #{arrivalDate},
+			tobe_num = #{tobeNum},
+			arrival_num = #{arrivalNum},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE account_arrival SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<!-- 根据合同获取到货信息 -->
+	<select id="getArrivalDetail" resultType="com.thinkgem.jeesite.modules.erp.entity.AccountArrivalDetail">
+		SELECT 
+		  <include refid="accountContractColumns"/>,
+		  am.`id` AS materialId,
+		  am.`materialName`,
+		  am.size,
+		  am.id AS contractId,
+		  apd.quantity,
+		  asp.`supplier`,
+		  a.`supplierNum`,
+		  IFNULL(aa.`arrival_num`,0 ) AS arrivalNum
+		FROM
+		  account_contract a 
+		  LEFT JOIN account_purchase ap 
+		    ON a.`purchaseNum` = ap.`orderNum` 
+		  LEFT JOIN account_purchase_detail apd 
+		    ON ap.`id` = apd.`parent_Id` 
+		  LEFT JOIN account_material am 
+		    ON apd.`materialCode` = am.`materialNum` 
+		  LEFT JOIN account_supplier asp 
+		    ON a.supplierNum = asp.`supplierNum` 
+		  LEFT JOIN account_arrival aa
+    		ON aa.`contract_id` = a.`id`
+		WHERE  a.contractNum = #{contractNum}  AND
+        a.`supplierNum` = apd.supplierCode
+		GROUP BY am.`id`  
+	</select>
+	
+	<!-- 根据合同获取到货信息数量 -->
+	<select id="getArrivalDetailNum" resultType="com.thinkgem.jeesite.modules.erp.entity.AccountArrivalDetail">
+		SELECT 
+		  <include refid="accountContractColumns"/>,
+		  IFNULL(aa.`arrival_num`,0 ) AS arrivalNum,
+		  aa.`material_id` AS materialId,
+		  am.`materialName` 
+		FROM
+		  account_contract a 
+		  LEFT JOIN account_arrival aa 
+		    ON a.`id` = aa.`contract_id` 
+		  LEFT JOIN account_material am 
+		    ON aa.`material_id` = am.`id` 
+		WHERE a.`contractNum` = #{contractNum}  
+	</select>
+</mapper>

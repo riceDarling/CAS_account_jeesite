@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.erp.dao.AccountInquiryDao">
+    
+	<sql id="accountInquiryColumns">
+		a.id AS "id",
+		a.inquirynum AS "inquirynum",
+		a.ordernum AS "ordernum",
+		a.validdate AS "validdate",
+		a.supplier AS "supplier",
+		a.materialname AS "materialname",
+		a.size AS "size",
+		a.unit AS "unit",
+		a.requisition AS "requisition",
+		a.unitprice AS "unitprice",
+		a.maker AS "maker",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.status AS "status",
+		a.end_date AS "endDate",
+		a.company AS "company",
+		a.department AS "department",
+		a.title AS "title"
+	</sql>
+	
+	<sql id="accountInquiryJoins">
+	</sql>
+    
+	<select id="get" resultType="AccountInquiry">
+		SELECT 
+			<include refid="accountInquiryColumns"/>
+		FROM account_inquiry a
+		<include refid="accountInquiryJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="AccountInquiry">
+		SELECT 
+			<include refid="accountInquiryColumns"/>
+		FROM account_inquiry a
+		<include refid="accountInquiryJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="beginDate != null and beginDate != ''">
+			    	AND a.create_date &gt; #{beginDate}
+			    </if> 
+			    <if test="endDate != null and endDate != ''">
+			    	AND a.create_date &lt; #{endDate}
+			    </if>
+			    <if test="status != null and status != ''">
+			    	AND a.status = #{status}
+			    </if>
+			     <if test="inquiry != null and inquiry != ''">
+			    	 AND (FIND_IN_SET(#{inquiry},a.inquiry))>0
+			    </if>
+			   
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="AccountInquiry">
+		SELECT 
+			<include refid="accountInquiryColumns"/>
+		FROM account_inquiry a
+		<include refid="accountInquiryJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO account_inquiry(
+			id,
+			inquirynum,
+			ordernum,
+			status,
+			requisition,
+			department,
+			title,
+			maker,
+			company,
+			validdate,
+			create_date,
+			update_date,
+			inquiry,
+			del_flag
+		) VALUES (
+			#{id},
+			#{inquirynum},
+			#{ordernum},
+			#{status},
+			#{requisition},
+			#{department},
+			#{title},
+			#{maker},
+			#{company},
+			#{validdate},
+			#{createDate},
+			#{updateDate},
+			#{inquiry},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE account_inquiry SET 	
+			inquirynum = #{inquirynum},
+			ordernum = #{ordernum},
+			validdate = #{validdate},
+			supplier = #{supplier},
+			materialname = #{materialname},
+			size = #{size},
+			unit = #{unit},
+			unitprice = #{unitprice},
+			maker = #{maker},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE account_inquiry SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="commit1">
+		UPDATE account_inquiry SET 
+			status = 1
+		WHERE ordernum = #{ordernum}
+	</update>
+	
+	
+	<select id="selectInquiryByDateAndStatus" parameterType="com.thinkgem.jeesite.modules.erp.entity.AccountInquiry" resultType="com.thinkgem.jeesite.modules.erp.entity.AccountInquiry">
+		SELECT 
+			<include refid="accountInquiryColumns"/>
+		FROM account_inquiry a
+		<include refid="accountInquiryJoins"/>
+			where 1=1 
+			<if test="beginDate != null and beginDate != ''">
+			    	AND a.create_date &gt; #{beginDate}
+			    </if> 
+			    <if test="endDate != null and endDate != ''">
+			    	AND a.create_date &lt; #{endDate}
+			    </if>
+			    <if test="status != null and status != ''">
+			    	AND a.status = #{status}
+			    </if>
+			    <choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date DESC
+			</otherwise>
+		</choose>
+    	</select>
+    	
+    	
+    <update id="setAccountInquiryStatus" parameterType="AccountInquiry">
+		UPDATE account_inquiry SET 	
+			status=#{status}
+		WHERE ordernum = #{ordernum}
+	</update>
+	
+	
+	<select id="getRequisitionId" resultType="string">
+		SELECT 
+			requisition 
+		FROM account_inquiry 
+		WHERE orderNum=#{ordernum}
+	</select>
+		
+</mapper>

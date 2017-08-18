@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.erp.dao.AccountReceiptDao">
+    
+	<sql id="accountReceiptColumns">
+		a.id AS "id",
+		a.receiptnum AS "receiptnum",
+		a.ordernum AS "ordernum",
+		a.supplier AS "supplier",
+		a.billingdate AS "billingdate",
+		a.materialname AS "materialname",
+		a.size AS "size",
+		a.pricefee AS "pricefee",
+		a.pricenotfee AS "pricenotfee",
+		a.quantity AS "quantity",
+		a.moneyfee AS "moneyfee",
+		a.moneynotfee AS "moneynotfee",
+		a.taxrte AS "taxrte",
+		a.tax AS "tax",
+		a.category AS "category",
+		a.maker AS "maker",
+		a.arrivalnum AS "arrivalnum",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.supplierNum AS "suppliernum"
+	</sql>
+	
+	<sql id="accountReceiptJoins">
+	</sql>
+    
+	<select id="get" resultType="AccountReceipt">
+		SELECT 
+			<include refid="accountReceiptColumns"/>
+		FROM account_receipt a
+		<include refid="accountReceiptJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="AccountReceipt">
+		SELECT 
+			<include refid="accountReceiptColumns"/>
+		FROM account_receipt a
+		<include refid="accountReceiptJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="AccountReceipt">
+		SELECT 
+			<include refid="accountReceiptColumns"/>
+		FROM account_receipt a
+		<include refid="accountReceiptJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO account_receipt(
+			id,
+			receiptnum,
+			ordernum,
+			supplier,
+			billingdate,
+			materialname,
+			size,
+			pricefee,
+			pricenotfee,
+			quantity,
+			moneyfee,
+			moneynotfee,
+			taxrte,
+			tax,
+			category,
+			maker,
+			arrivalnum,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			suppliernum
+		) VALUES (
+			#{id},
+			#{receiptnum},
+			#{ordernum},
+			#{supplier},
+			#{billingdate},
+			#{materialname},
+			#{size},
+			#{pricefee},
+			#{pricenotfee},
+			#{quantity},
+			#{moneyfee},
+			#{moneynotfee},
+			#{taxrte},
+			#{tax},
+			#{category},
+			#{maker},
+			#{arrivalnum},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{suppliernum}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE account_receipt SET 	
+			receiptnum = #{receiptnum},
+			ordernum = #{ordernum},
+			supplier = #{supplier},
+			billingdate = #{billingdate},
+			materialname = #{materialname},
+			size = #{size},
+			pricefee = #{pricefee},
+			pricenotfee = #{pricenotfee},
+			quantity = #{quantity},
+			moneyfee = #{moneyfee},
+			moneynotfee = #{moneynotfee},
+			taxrte = #{taxrte},
+			tax = #{tax},
+			category = #{category},
+			maker = #{maker},
+			arrivalnum = #{arrivalnum},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			suppliernum=#{suppliernum}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE account_receipt SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<select id="getAccountReceiptBySupplier" resultType="AccountReceipt">
+		SELECT 
+			<include refid="accountReceiptColumns"/>
+		FROM account_receipt a
+		<include refid="accountReceiptJoins"/>
+		WHERE a.supplier = #{supplier}
+	</select>
+	
+</mapper>

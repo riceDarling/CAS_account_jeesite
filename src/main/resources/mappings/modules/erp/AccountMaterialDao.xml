@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.erp.dao.AccountMaterialDao">
+    
+	<sql id="accountMaterialColumns">
+		a.id AS "id",
+		a.materialnum AS "materialnum",
+		a.materialname AS "materialname",
+		a.size AS "size",
+		a.unit AS "unit",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="accountMaterialJoins">
+	</sql>
+    
+	<select id="get" resultType="AccountMaterial">
+		SELECT 
+			<include refid="accountMaterialColumns"/>
+		FROM account_material a
+		<include refid="accountMaterialJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="AccountMaterial">
+		SELECT 
+			<include refid="accountMaterialColumns"/>
+		FROM account_material a
+		<include refid="accountMaterialJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="materialname != null and materialname != ''">
+				AND a.materialname = #{materialname}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="AccountMaterial">
+		SELECT 
+			<include refid="accountMaterialColumns"/>
+		FROM account_material a
+		<include refid="accountMaterialJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO account_material(
+			id,
+			materialnum,
+			materialname,
+			size,
+			unit,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{materialnum},
+			#{materialname},
+			#{size},
+			#{unit},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE account_material SET 	
+			materialnum = #{materialnum},
+			materialname = #{materialname},
+			size = #{size},
+			unit = #{unit},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE account_material SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	
+	<select id="getMaterialByName" resultType="AccountMaterial" parameterType="string">
+		SELECT 
+			*
+		FROM account_material a
+		WHERE a.materialname = #{materialname}
+	</select>
+	
+	<select id="getMaterialBymaterialcode" resultType="AccountMaterial" parameterType="string">
+		SELECT 
+			*
+		FROM account_material a
+		WHERE a.materialNum = #{materialcode}
+	</select>
+	
+</mapper>

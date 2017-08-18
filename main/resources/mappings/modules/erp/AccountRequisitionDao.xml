@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.erp.dao.AccountRequisitionDao">
+    
+	<sql id="accountRequisitionColumns">
+		a.id AS "id",
+		a.ordernum AS "ordernum",
+		a.title AS "title",
+		a.reason AS "reason",
+		a.receivedate AS "receivedate",
+		a.office_id AS "office.id",
+		a.proc_ins_id AS "procInsId",
+		a.maker AS "maker",
+		a.checker AS "checker",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.lead_text AS "leadText",
+		a.hr_text AS "hrText",
+		a.is_inquiry AS "isInquiry",
+		o6.name AS "office.name"
+	</sql>
+	
+	<sql id="accountRequisitionJoins">
+		LEFT JOIN sys_office o6 ON o6.id = a.office_id
+	</sql>
+    
+	<select id="get" resultType="AccountRequisition">
+		SELECT 
+			<include refid="accountRequisitionColumns"/>
+		FROM account_requisition a
+		<include refid="accountRequisitionJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="AccountRequisition">
+		SELECT 
+			<include refid="accountRequisitionColumns"/>
+		FROM account_requisition a
+		<include refid="accountRequisitionJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="title != null and title != ''">
+				AND a.title LIKE 
+					<if test="dbName == 'oracle'">'%'||#{title}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{title}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{title},'%')</if>
+			</if>
+			<if test="updateDate != null and updateDate != ''">
+				AND a.update_date = #{updateDate}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="AccountRequisition">
+		SELECT 
+			<include refid="accountRequisitionColumns"/>
+		FROM account_requisition a
+		<include refid="accountRequisitionJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO account_requisition(
+			id,
+			ordernum,
+			title,
+			reason,
+			receivedate,
+			office_id,
+			proc_ins_id,
+			maker,
+			checker,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			lead_text,
+			hr_text,
+			is_inquiry
+		) VALUES (
+			#{id},
+			#{ordernum},
+			#{title},
+			#{reason},
+			#{receivedate},
+			#{office.id},
+			#{procInsId},
+			#{maker},
+			#{checker},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{leadText},
+			#{hrText},
+			#{isInquiry}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE account_requisition SET 	
+			ordernum = #{ordernum},
+			title = #{title},
+			reason = #{reason},
+			receivedate = #{receivedate},
+			office_id = #{office.id},
+			proc_ins_id = #{procInsId},
+			maker = #{maker},
+			checker = #{checker},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			lead_text = #{leadText},
+			hr_text = #{hrText},
+			is_inquiry = #{isInquiry}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE account_requisition SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+</mapper>

@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.erp.dao.AccountRequisitionDetailDao">
+    
+	<sql id="accountRequisitionDetailColumns">
+		a.id AS "id",
+		a.parent_id AS "parent.id",
+		a.materialcode AS "materialcode",
+		a.quantitiy AS "quantitiy",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.units AS "units",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="accountRequisitionDetailJoins">
+		LEFT JOIN account_requisition b ON b.id = a.parent_id
+	</sql>
+    
+	<select id="get" resultType="AccountRequisitionDetail">
+		SELECT 
+			<include refid="accountRequisitionDetailColumns"/>
+		FROM account_requisition_detail a
+		<include refid="accountRequisitionDetailJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="AccountRequisitionDetail">
+		SELECT 
+			a.*,c.name AS 'unit'
+		FROM account_requisition_detail a
+		LEFT JOIN account_para_info c ON a.units=c.id  
+		<include refid="accountRequisitionDetailJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="parent != null and parent.id != null and parent.id != ''">
+				AND a.parent_id = #{parent.id}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="AccountRequisitionDetail">
+		SELECT 
+			<include refid="accountRequisitionDetailColumns"/>
+		FROM account_requisition_detail a
+		<include refid="accountRequisitionDetailJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO account_requisition_detail(
+			id,
+			parent_id,
+			materialcode,
+			quantitiy,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			units,
+			del_flag
+		) VALUES (
+			#{id},
+			#{parent.id},
+			#{materialcode},
+			#{quantitiy},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{units},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE account_requisition_detail SET 	
+			parent_id = #{parent.id},
+			materialcode = #{materialcode},
+			quantitiy = #{quantitiy},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			units=#{units},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE account_requisition_detail SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		<choose>
+			<when test="id !=null and id != ''">
+				WHERE id = #{id}
+			</when>
+			<otherwise>
+				WHERE parent_id = #{parent.id}
+			</otherwise>
+		</choose>
+	</update>
+	
+	<select id="getAccountRequisitionDetailsByid" parameterType="String" resultType="AccountRequisitionDetail">
+	SELECT * FROM account_requisition_detail WHERE parent_Id=#{parentid}
+	</select>
+	
+</mapper>

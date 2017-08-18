@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.erp.dao.AccountArrivalDetailDao">
+    
+	<sql id="accountArrivalDetailColumns">
+		a.id AS "id",
+		a.parent_id AS "parent.id",
+		a.ordernum AS "ordernum",
+		a.supplier AS "supplier",
+		a.materialname AS "materialname",
+		a.size AS "size",
+		a.ingredient AS "ingredient",
+		a.arrivalbatch AS "arrivalbatch",
+		a.orderquantity AS "orderquantity",
+		a.receivedquantity AS "receivedquantity",
+		a.loss AS "loss",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="accountArrivalDetailJoins">
+		LEFT JOIN account_arrival b ON b.id = a.parent_id
+	</sql>
+    
+	<select id="get" resultType="com.thinkgem.jeesite.modules.erp.entity.AccountArrivalDetail">
+		SELECT 
+			<include refid="accountArrivalDetailColumns"/>
+		FROM account_arrival_detail a
+		<include refid="accountArrivalDetailJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="com.thinkgem.jeesite.modules.erp.entity.AccountArrivalDetail">
+		SELECT 
+			<include refid="accountArrivalDetailColumns"/>
+		FROM account_arrival_detail a
+		<include refid="accountArrivalDetailJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="parent != null and parent.id != null and parent.id != ''">
+				AND a.parent_id = #{parent.id}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="com.thinkgem.jeesite.modules.erp.entity.AccountArrivalDetail">
+		SELECT 
+			<include refid="accountArrivalDetailColumns"/>
+		FROM account_arrival_detail a
+		<include refid="accountArrivalDetailJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO account_arrival_detail(
+			id,
+			parent_id,
+			ordernum,
+			supplier,
+			materialname,
+			size,
+			ingredient,
+			arrivalbatch,
+			orderquantity,
+			receivedquantity,
+			loss,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{parent.id},
+			#{ordernum},
+			#{supplier},
+			#{materialname},
+			#{size},
+			#{ingredient},
+			#{arrivalbatch},
+			#{orderquantity},
+			#{receivedquantity},
+			#{loss},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE account_arrival_detail SET 	
+			parent_id = #{parent.id},
+			ordernum = #{ordernum},
+			supplier = #{supplier},
+			materialname = #{materialname},
+			size = #{size},
+			ingredient = #{ingredient},
+			arrivalbatch = #{arrivalbatch},
+			orderquantity = #{orderquantity},
+			receivedquantity = #{receivedquantity},
+			loss = #{loss},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE account_arrival_detail SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		<choose>
+			<when test="id !=null and id != ''">
+				WHERE id = #{id}
+			</when>
+			<otherwise>
+				WHERE parent_id = #{parent.id}
+			</otherwise>
+		</choose>
+	</update>
+</mapper>

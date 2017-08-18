@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.erp.dao.AccountSupplierInputDao">
+    
+	<sql id="accountSupplierInputColumns">
+		a.id AS "id",
+		a.suppliernum AS "suppliernum",
+		a.supplier AS "supplier",
+		a.begindate AS "begindate",
+		a.beginmoney AS "beginmoney",
+		a.maker AS "maker",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="accountSupplierInputJoins">
+	</sql>
+    
+	<select id="get" resultType="AccountSupplierInput">
+		SELECT 
+			<include refid="accountSupplierInputColumns"/>
+		FROM account_supplier_input a
+		<include refid="accountSupplierInputJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="AccountSupplierInput">
+		SELECT 
+			<include refid="accountSupplierInputColumns"/>
+		FROM account_supplier_input a
+		<include refid="accountSupplierInputJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="suppliernum != null and suppliernum != ''">
+				AND a.suppliernum = #{suppliernum}
+			</if>
+			<if test="supplier != null and supplier != ''">
+				AND a.supplier = #{supplier}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="AccountSupplierInput">
+		SELECT 
+			<include refid="accountSupplierInputColumns"/>
+		FROM account_supplier_input a
+		<include refid="accountSupplierInputJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO account_supplier_input(
+			id,
+			suppliernum,
+			supplier,
+			begindate,
+			beginmoney,
+			maker,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{suppliernum},
+			#{supplier},
+			#{begindate},
+			#{beginmoney},
+			#{maker},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE account_supplier_input SET 	
+			suppliernum = #{suppliernum},
+			supplier = #{supplier},
+			begindate = #{begindate},
+			beginmoney = #{beginmoney},
+			maker = #{maker},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE account_supplier_input SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<select id="findBalance" resultType="AccountSupplierTotalBalance">
+		SELECT
+			s.supplierNum,
+			s.supplier,
+			s.beginmoney,
+			p.payAmount,
+		  	r.moneyFee
+		FROM
+			account_supplier_input AS s
+		LEFT JOIN account_payment AS p ON s.supplierNum = p.supplierCode
+		LEFT JOIN account_receipt AS r ON s.supplierNum = r.supplierNum
+		<where>
+			<if test="beginDate != null and beginDate != ''">
+				AND p.create_date &gt; #{beginDate}
+			</if>
+			<if test="endDate != null and endDate != ''">
+				AND p.create_date &lt; #{endDate}
+			</if>
+		</where>
+		group by s.supplierNum
+	</select>
+	
+</mapper>

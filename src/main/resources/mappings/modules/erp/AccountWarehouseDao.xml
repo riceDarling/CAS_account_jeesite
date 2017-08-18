@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.erp.dao.AccountWarehouseDao">
+    
+	<sql id="accountWarehouseColumns">
+		a.id AS "id",
+		a.housename AS "housename",
+		a.size AS "size",
+		a.address AS "address",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="accountWarehouseJoins">
+	</sql>
+    
+	<select id="get" resultType="AccountWarehouse">
+		SELECT 
+			<include refid="accountWarehouseColumns"/>
+		FROM account_warehouse a
+		<include refid="accountWarehouseJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="AccountWarehouse">
+		SELECT 
+			<include refid="accountWarehouseColumns"/>
+		FROM account_warehouse a
+		<include refid="accountWarehouseJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="AccountWarehouse">
+		SELECT 
+			<include refid="accountWarehouseColumns"/>
+		FROM account_warehouse a
+		<include refid="accountWarehouseJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO account_warehouse(
+			id,
+			housename,
+			size,
+			address,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{housename},
+			#{size},
+			#{address},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE account_warehouse SET 	
+			housename = #{housename},
+			size = #{size},
+			address = #{address},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE account_warehouse SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	<select id="getAllWarehouse" parameterType="String" resultType="AccountWarehouse">
+	 SELECT a.housename,b.location as location FROM account_warehouse a ,account_location b
+     WHERE a.id=b.warehouseId 
+     and a.housename=#{housename}
+	</select>
+</mapper>

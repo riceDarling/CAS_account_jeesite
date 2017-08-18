@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.erp.dao.AccountPaymentDao">
+    
+	<sql id="accountPaymentColumns">
+		a.id AS "id",
+		a.ordernum AS "ordernum",
+		a.suppliercode AS "suppliercode",
+		a.supplier AS "supplier",
+		a.payamount AS "payamount",
+		a.payway AS "payway",
+		a.paycode AS "paycode",
+		a.paybank AS "paybank",
+		a.paybanknum AS "paybanknum",
+		a.paycategory AS "paycategory",
+		a.contract AS "contract",
+		a.paydate AS "paydate",
+		a.maker AS "maker",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.receiptnum AS "receiptnum",
+		a.del_flag AS "delFlag",
+		a.title AS "title",
+		a.receiptAddress AS "receiptAddress"
+	</sql>
+	
+	<sql id="accountPaymentJoins">
+	</sql>
+    
+	<select id="get" resultType="AccountPayment">
+		SELECT 
+			<include refid="accountPaymentColumns"/>
+		FROM account_payment a
+		<include refid="accountPaymentJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="AccountPayment">
+		SELECT 
+			a.*,b.`name` AS payWays
+		FROM account_payment a 
+		LEFT JOIN account_para_info b ON a.payWay=b.id
+		<include refid="accountPaymentJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="receiptnum != null and receiptnum != ''">
+				AND a.receiptnum = #{receiptnum}
+			</if>
+			<if test="title != null and title != ''">
+				AND a.title = #{title}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="AccountPayment">
+		SELECT 
+			<include refid="accountPaymentColumns"/>
+		FROM account_payment a
+		<include refid="accountPaymentJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO account_payment(
+			id,
+			ordernum,
+			suppliercode,
+			supplier,
+			payamount,
+			payway,
+			paycode,
+			paybank,
+			paybanknum,
+			paycategory,
+			contract,
+			paydate,
+			maker,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			receiptnum,
+			del_flag,
+			title,
+			receiptAddress
+		) VALUES (
+			#{id},
+			#{ordernum},
+			#{suppliercode},
+			#{supplier},
+			#{payamount},
+			#{payway},
+			#{paycode},
+			#{paybank},
+			#{paybanknum},
+			#{paycategory},
+			#{contract},
+			#{paydate},
+			#{maker},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{receiptnum},
+			#{delFlag},
+			#{title},
+			#{receiptAddress}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE account_payment SET 	
+			ordernum = #{ordernum},
+			suppliercode = #{suppliercode},
+			supplier = #{supplier},
+			payamount = #{payamount},
+			payway = #{payway},
+			paycode = #{paycode},
+			paybank = #{paybank},
+			paybanknum = #{paybanknum},
+			paycategory = #{paycategory},
+			contract = #{contract},
+			paydate = #{paydate},
+			maker = #{maker},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			receiptnum=#{receiptnum},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE account_payment SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<select id="selectPaymentByContract" resultType="AccountPayment">
+		SELECT 
+			<include refid="accountPaymentColumns"/>
+		FROM account_payment a
+		<include refid="accountPaymentJoins"/>
+		WHERE a.contract = #{contract}
+	</select>
+	
+</mapper>

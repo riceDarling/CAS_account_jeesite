@@ -1,0 +1,6 @@
+#NOTE: This is an Aether internal implementation file, its format can be changed without prior notice.
+#Sat Jun 24 14:39:43 CST 2017
+imgscalr-lib-4.2.jar>=
+imgscalr-lib-4.2.pom>jeesite-repos=
+imgscalr-lib-4.2.jar>jeesite-repos=
+imgscalr-lib-4.2-sources.jar>jeesite-repos=

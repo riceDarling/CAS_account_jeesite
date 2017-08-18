@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.erp.dao.AccountParaInfoDao">
+    
+	
+	<insert id="insert">
+		INSERT INTO account_para_info(
+			p_id,
+			name
+		) VALUES (
+			#{pId},
+			#{name}
+		)
+	</insert>
+	
+	<select id="getAccountPara" resultType="map">
+		SELECT 
+			*
+		FROM account_para
+	</select>
+	
+	<select id="getParaInfoList" resultType="com.thinkgem.jeesite.modules.erp.entity.AccountParaInfo">
+		SELECT 
+			*
+		FROM account_para_info
+		WHERE p_id=#{pId}
+	</select>
+
+</mapper>

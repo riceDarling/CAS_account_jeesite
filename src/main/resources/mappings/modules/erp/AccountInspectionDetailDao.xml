@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.erp.dao.AccountInspectionDetailDao">
+    
+	<sql id="accountInspectionDetailColumns">
+		a.id AS "id",
+		a.parent_id AS "parent.id",
+		a.status AS "status",
+		a.size AS "size",
+		a.materialname AS "materialname",
+		a.inspectionmode AS "inspectionmode",
+		a.ingredient AS "ingredient",
+		a.granularity AS "granularity",
+		a.appearance AS "appearance",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="accountInspectionDetailJoins">
+		LEFT JOIN account_inspection b ON b.id = a.parent_id
+	</sql>
+    
+	<select id="get" resultType="AccountInspectionDetail">
+		SELECT 
+			<include refid="accountInspectionDetailColumns"/>
+		FROM account_inspection_detail a
+		<include refid="accountInspectionDetailJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="AccountInspectionDetail">
+		SELECT 
+			<include refid="accountInspectionDetailColumns"/>
+		FROM account_inspection_detail a
+		<include refid="accountInspectionDetailJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="parent != null and parent.id != null and parent.id != ''">
+				AND a.parent_id = #{parent.id}
+			</if>
+			<if test="materialname != null and materialname != ''">
+				AND a.materialname = #{materialname}
+			</if>
+			<if test="inspectionmode != null and inspectionmode != ''">
+				AND a.inspectionmode = #{inspectionmode}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="AccountInspectionDetail">
+		SELECT 
+			<include refid="accountInspectionDetailColumns"/>
+		FROM account_inspection_detail a
+		<include refid="accountInspectionDetailJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO account_inspection_detail(
+			id,
+			parent_id,
+			size,
+			materialname,
+			inspectionmode,
+			ingredient,
+			granularity,
+			appearance,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{parent.id},
+			#{size},
+			#{materialname},
+			#{inspectionmode},
+			#{ingredient},
+			#{granularity},
+			#{appearance},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE account_inspection_detail SET 	
+			parent_id = #{parent.id},
+			size = #{size},
+			materialname = #{materialname},
+			inspectionmode = #{inspectionmode},
+			ingredient = #{ingredient},
+			granularity = #{granularity},
+			appearance = #{appearance},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="updateDetail">
+		UPDATE account_inspection_detail SET 	
+		<if test="inspectionmode != null and inspectionmode != ''">
+			inspectionmode = #{inspectionmode},
+		</if>
+		<if test="ingredient != null and ingredient != ''">
+			ingredient = #{ingredient},
+		</if>
+		<if test="granularity != null and granularity != ''">
+			granularity = #{granularity},
+		</if>
+		<if test="appearance != null and appearance != ''">
+			appearance = #{appearance},
+		</if>
+		<if test="status != null and status != ''">
+			status = #{status},
+		</if>
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE account_inspection_detail SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		<choose>
+			<when test="id !=null and id != ''">
+				WHERE id = #{id}
+			</when>
+			<otherwise>
+				WHERE parent_id = #{parent.id}
+			</otherwise>
+		</choose>
+	</update>
+	<select id="getAccount_inspectionInfo" resultType="com.thinkgem.jeesite.modules.erp.entity.AccountInspectionInfo">
+	SELECT *FROM account_inspection a LEFT JOIN account_inspection_detail b
+     ON a.orderNum=b.orderNum  where a.orderNum=#{orderNum}
+	</select>
+</mapper>

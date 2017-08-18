@@ -1,0 +1,5 @@
+#NOTE: This is an Aether internal implementation file, its format can be changed without prior notice.
+#Sat Jun 24 14:39:43 CST 2017
+xmlbeans-2.3.0.jar>=
+xmlbeans-2.3.0.pom>jeesite-repos=
+xmlbeans-2.3.0.jar>jeesite-repos=

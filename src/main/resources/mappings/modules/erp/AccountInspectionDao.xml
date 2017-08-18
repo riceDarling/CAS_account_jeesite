@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.erp.dao.AccountInspectionDao">
+    
+	<sql id="accountInspectionColumns">
+		a.id AS "id",
+		a.ordernum AS "ordernum",
+		a.status AS "status",
+		a.arrivalnum AS "arrivalnum",
+		a.inspectionman AS "inspectionman",
+		a.checker AS "checker",
+		a.inspectiondate AS "inspectiondate",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="accountContractColumns">
+		a.id AS "id",
+		a.contractnum AS "contractnum",
+		a.contracttitle AS "contracttitle",
+		a.purchasenum AS "purchasenum",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="accountInspectionJoins">
+	</sql>
+    
+	<select id="get" resultType="AccountInspection">
+		SELECT 
+			<include refid="accountInspectionColumns"/>
+		FROM account_inspection a
+		<include refid="accountInspectionJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="AccountInspection">
+		SELECT 
+		  <include refid="accountInspectionColumns"/>,
+		  ac.id AS contractId,
+		  ac.`contractTitle`,
+		  ap.title 
+		FROM
+		  account_inspection a,
+		  account_arrival aa,
+		  account_contract ac,
+		  account_purchase ap 
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			AND a.`arrivalNum` = aa.`id` 
+		    AND aa.`contract_id` = ac.`id` 
+		    AND ac.`purchaseNum` = ap.`orderNum` 
+			<if test="title != null and title != ''">
+				AND ap.title LIKE 
+					<if test="dbName == 'mysql'">concat('%',#{title},'%')</if>
+			</if>
+			<if test="contractTitle != null and contractTitle != ''">
+				AND ac.contractTitle LIKE 
+					<if test="dbName == 'mysql'">concat('%',#{contractTitle},'%')</if>
+			</if>
+			<if test="status != null and status != ''">
+				and a.status = #{status}
+			</if>
+			<if test="beginInspectiondate != null and beginInspectiondate != '' ">
+				AND a.inspectiondate &gt;= #{beginInspectiondate} 
+			</if>
+			<if test="endInspectiondate != null and endInspectiondate != ''">
+				AND a.inspectiondate &lt;= #{endInspectiondate}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="AccountInspection">
+		SELECT 
+			<include refid="accountInspectionColumns"/>
+		FROM account_inspection a
+		<include refid="accountInspectionJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO account_inspection(
+			id,
+			ordernum,
+			arrivalnum,
+			inspectionman,
+			checker,
+			inspectiondate,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{ordernum},
+			#{arrivalnum},
+			#{inspectionman},
+			#{checker},
+			#{inspectiondate},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE account_inspection SET 	
+			ordernum = #{ordernum},
+			arrivalnum = #{arrivalnum},
+			inspectionman = #{inspectionman},
+			checker = #{checker},
+			inspectiondate = #{inspectiondate},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE account_inspection SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<select id="getArrivalList" resultType="AccountArrival">
+		SELECT 
+		  aa.`id` AS arrivalId,
+		  aa.`contract_id`,
+		  aa.`material_id`,
+		  aa.`arrival_date`,
+		  aa.`tobe_num`,
+		  aa.`arrival_num`,
+		  am.`materialName`,
+		  am.`size`,
+		  ac.`contractTitle` 
+		FROM
+		  account_arrival aa 
+		  LEFT JOIN account_inspection ai 
+		    ON aa.`id` = ai.`arrivalNum` 
+		  LEFT JOIN account_inspection_detail aid 
+		    ON ai.`id` = aid.`parent_Id` 
+		  LEFT JOIN account_material am 
+		    ON aa.`material_id` = am.`id` 
+		  LEFT JOIN account_contract ac 
+		    ON aa.`contract_id` = ac.`id` 
+		WHERE ai.`id` IS NULL 
+		GROUP BY  ac.`contractTitle`,aa.`arrival_date` 
+		ORDER BY aa.`arrival_date` DESC 
+	</select>
+	
+	<!-- 根据到货时间及合同ID获取到货未送检详情 -->
+	<select id="getDetailByDateAndContractId" resultType="AccountArrival">
+		SELECT 
+		  aa.`id` AS arrivalId,
+		  aa.`contract_id`,
+		  aa.`material_id`,
+		  aa.`arrival_date`,
+		  aa.`tobe_num`,
+		  aa.`arrival_num`,
+		  am.`materialName`,
+		  am.`size`,
+		  ac.`contractTitle` 
+		FROM
+		  account_arrival aa 
+		  LEFT JOIN account_inspection ai 
+		    ON aa.`id` = ai.`arrivalNum` 
+		  LEFT JOIN account_inspection_detail aid 
+		    ON ai.`id` = aid.`parent_Id` 
+		  LEFT JOIN account_material am 
+		    ON aa.`material_id` = am.`id` 
+		  LEFT JOIN account_contract ac 
+		    ON aa.`contract_id` = ac.`id` 
+		WHERE ai.`id` IS NULL 
+		  AND aa.contract_id = #{contractId} 
+		  AND aa.`arrival_date` = #{arrivalDate} 
+	</select>
+	
+	<!-- 根据合同ID和送检日期获取送检详细信息 -->
+	<select id="getNextInspection" resultType="AccountInspection">
+		SELECT 
+		  a.id AS "contractId",
+		  a.contractnum AS "contractnum",
+		  a.contracttitle AS "contracttitle",
+		  a.purchasenum AS "purchasenum",
+		  aa.`arrival_num` AS arrivalnum,
+		  ai.`inspectionDate` AS inspectiondate,
+		  aid.`materialName` AS materialname,
+		  aid.`ingredient`,
+		  aid.`id` AS inspectionDetailId,
+		  aid.status,
+  		  aid.size  
+		FROM
+		  account_contract a,
+		  account_arrival aa,
+		  account_inspection ai,
+		  account_inspection_detail aid 
+		WHERE a.`id` = #{contractId} 
+		  AND a.`id` = aa.`contract_id` 
+		  AND aa.`id` = ai.`arrivalNum` 
+		  AND ai.`inspectiondate` = #{inspectiondate} 
+		  AND ai.`id` = aid.`parent_Id` 
+	</select>
+	
+	<!-- 根据合同ID和送检日期及送检子表ID获取送检详细信息 -->
+	<select id="getInspectionDetailToAdd" resultType="AccountInspection">
+		SELECT 
+		  <include refid="accountContractColumns"/>,
+		  aa.`arrival_num` AS arrivalnum,
+		  ai.`inspectionDate` AS inspectiondate,
+		  ai.inspectionman,
+		  aid.`materialName` AS materialname,
+		  aid.`ingredient`,
+  		  aid.`id` AS inspectionDetailId,
+  		  aid.size  
+		FROM
+		  account_contract a,
+		  account_arrival aa,
+		  account_inspection ai,
+		  account_inspection_detail aid 
+		WHERE a.`id` = #{contractId} 
+		  AND a.`id` = aa.`contract_id` 
+		  AND aa.`id` = ai.`arrivalNum` 
+		  AND ai.`inspectiondate` = #{inspectiondate} 
+		  AND ai.`id` = aid.`parent_Id` 
+		  AND aid.`id` = #{inspectionDetailId} 
+	</select>
+</mapper>

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.erp.dao.AccountPurchaseSupplierDao">
+    
+	<sql id="accountPurchaseSupplierColumns">
+		a.id AS "id",
+		a.parent_id AS "parent.id",
+		a.deadline AS "deadline",
+		a.supplier AS "supplier", 
+		a.payway AS "payway"
+	</sql>
+	
+	<sql id="accountPurchaseSupplierJoins">
+	</sql>
+    
+	<select id="get" resultType="AccountPurchaseSupplier">
+		SELECT 
+			<include refid="accountPurchaseSupplierColumns"/>
+		FROM account_purchase_supplier a
+		<include refid="accountPurchaseSupplierJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="AccountPurchaseSupplier">
+		SELECT 
+			<include refid="accountPurchaseSupplierColumns"/>
+		FROM account_purchase_supplier a
+		<include refid="accountPurchaseSupplierJoins"/>
+		<where>
+			
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="AccountPurchaseSupplier">
+		SELECT 
+			<include refid="accountPurchaseSupplierColumns"/>
+		FROM account_purchase_supplier a
+		<include refid="accountPurchaseSupplierJoins"/>
+		<where>
+			
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO account_purchase_supplier(
+			id,
+			parent_id,
+			deadline,
+			supplier,
+			payway
+		) VALUES (
+			#{id},
+			#{parent.id},
+			#{deadline},
+			#{supplier},
+			#{payway}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE account_purchase_supplier SET 	
+			parent_id = #{parent.id},
+			deadline = #{deadline},
+			supplier=#{supplier},
+			payway = #{payway}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		DELETE FROM account_purchase_supplier
+		WHERE id = #{id}
+	</update>
+	
+	<select id="getbyParentId" resultType="AccountPurchaseSupplier">
+		SELECT
+			a.*,b.`name` AS payways
+		FROM
+		account_purchase_supplier a
+		LEFT JOIN account_para_info b ON a.payway=b.id
+		<include refid="accountPurchaseSupplierJoins"/>
+		WHERE a.parent_Id = #{parentId}
+	</select>
+	
+	<delete id="deleteByparentId" parameterType="string">
+		DELETE FROM account_purchase_supplier WHERE parent_Id = #{parentId}
+	</delete>
+</mapper>

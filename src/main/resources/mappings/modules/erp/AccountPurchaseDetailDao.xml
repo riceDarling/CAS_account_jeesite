@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.erp.dao.AccountPurchaseDetailDao">
+    
+	<sql id="accountPurchaseDetailColumns">
+		a.id AS "id",
+		a.parent_id AS "parent.id",
+		a.suppliercode AS "suppliercode",
+		a.materialcode AS "materialcode",
+		a.packway AS "packway",
+		a.transport AS "transport",
+		a.freightfee AS "freightfee",
+		a.unitprice AS "unitprice",
+		a.quantity AS "quantity",
+		a.receivedate AS "receivedate",
+		a.totlemoney AS "totlemoney",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="accountPurchaseDetailJoins">
+		LEFT JOIN account_purchase b ON b.id = a.parent_id
+	</sql>
+    
+	<select id="get" resultType="AccountPurchaseDetail">
+		SELECT 
+			<include refid="accountPurchaseDetailColumns"/>
+		FROM account_purchase_detail a
+		<include refid="accountPurchaseDetailJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="AccountPurchaseDetail">
+		SELECT a.*,c.`name` AS packways,d.`name` AS transports
+		FROM account_purchase_detail a
+		LEFT JOIN account_para_info c ON a.packWay=c.id
+		LEFT JOIN account_para_info d ON a.transport=d.id
+		<include refid="accountPurchaseDetailJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="parent != null and parent.id != null and parent.id != ''">
+				AND a.parent_id = #{parent.id}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="AccountPurchaseDetail">
+		SELECT 
+			<include refid="accountPurchaseDetailColumns"/>
+		FROM account_purchase_detail a
+		<include refid="accountPurchaseDetailJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO account_purchase_detail(
+			id,
+			parent_id,
+			suppliercode,
+			materialcode,
+			packway,
+			transport,
+			freightfee,
+			unitprice,
+			quantity,
+			receivedate,
+			totlemoney,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{parent.id},
+			#{suppliercode},
+			#{materialcode},
+			#{packway},
+			#{transport},
+			#{freightfee},
+			#{unitprice},
+			#{quantity},
+			#{receivedate},
+			#{totlemoney},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE account_purchase_detail SET 	
+			parent_id = #{parent.id},
+			suppliercode = #{suppliercode},
+			materialcode = #{materialcode},
+			packway = #{packway},
+			transport = #{transport},
+			freightfee = #{freightfee},
+			unitprice = #{unitprice},
+			quantity = #{quantity},
+			receivedate = #{receivedate},
+			totlemoney = #{totlemoney},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE account_purchase_detail SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		<choose>
+			<when test="id !=null and id != ''">
+				WHERE id = #{id}
+			</when>
+			<otherwise>
+				WHERE parent_id = #{parent.id}
+			</otherwise>
+		</choose>
+	</update>
+	
+	<delete id="deleteByparentId" parameterType="string">
+		DELETE FROM account_purchase_detail WHERE parent_Id = #{parentId}
+	</delete>
+	<select id="getAccountSupplierByPurchasenum" parameterType="AccountPurchaseDetail" resultType="AccountPurchaseDetail">
+		SELECT 
+		b.materialName as materialcode,b.size as suppliercode,a.quantity,a.unitprice,a.totlemoney
+		FROM account_purchase_detail a 
+       LEFT JOIN account_material b
+       ON a.materialCode=b.materialNum
+		WHERE a.parent_Id=#{materialcode} AND a.supplierCode=#{suppliercode}
+	</select>
+	<select id="getAccountSupplierByPurchasenumtitle" parameterType="String" resultType="AccountPurchaseDetail">
+		SELECT a.parent_Id as materialcode,b.orderNum as packway,
+		 	c.supplier as suppliercode,c.supplierNum as transport,a.quantity,a.unitprice,a.totlemoney
+		FROM account_purchase_detail a 
+       LEFT JOIN account_purchase b
+       ON a.parent_Id=b.id
+       LEFT JOIN account_supplier c ON a.suppliercode=c.supplierNum
+      LEFT JOIN account_material d ON  a.materialcode=d.materialNum
+		WHERE b.title = #{purchasenumtitle} 
+	</select>
+</mapper>

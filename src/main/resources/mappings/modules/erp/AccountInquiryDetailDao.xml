@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.erp.dao.AccountInquiryDetailDao">
+    
+	<sql id="accountInquiryDetailColumns">
+		a.id AS "id",
+		a.inquirydetailnum AS "inquirydetailnum",
+		a.ordernum AS "ordernum",
+		a.validdate AS "validdate",
+		a.supplier AS "supplier",
+		a.materialname AS "materialname",
+		a.size AS "size",
+		a.unit AS "unit",
+		a.unitprice AS "unitprice",
+		a.requisition AS "requisition",
+		a.maker AS "maker",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.brand AS "brand",
+		a.suppliercode AS "suppliercode",
+		a.inquiry_time AS "inquiryTime",
+		a.materialcode AS "materialcode"
+	</sql>
+	
+	<sql id="accountInquiryDetailJoins">
+	</sql>
+    
+	<select id="get" resultType="AccountInquiryDetail">
+		SELECT 
+			<include refid="accountInquiryDetailColumns"/>
+		FROM account_inquiry_detail a
+		<include refid="accountInquiryDetailJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="AccountInquiryDetail">
+		SELECT 
+			<include refid="accountInquiryDetailColumns"/>
+		FROM account_inquiry_detail a
+		<include refid="accountInquiryDetailJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="AccountInquiryDetail">
+		SELECT 
+			<include refid="accountInquiryDetailColumns"/>
+		FROM account_inquiry_detail a
+		<include refid="accountInquiryDetailJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO account_inquiry_detail(
+			id,
+			inquirydetailnum,
+			ordernum,
+			validdate,
+			supplier,
+			materialname,
+			size,
+			unit,
+			unitprice,
+			requisition,
+			maker,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			brand,
+			suppliercode,
+			inquiry_time,
+			materialcode
+		) VALUES (
+			#{id},
+			#{inquirydetailnum},
+			#{ordernum},
+			#{validdate},
+			#{supplier},
+			#{materialname},
+			#{size},
+			#{unit},
+			#{unitprice},
+			#{requisition},
+			#{maker},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{brand},
+			#{suppliercode},
+			#{inquiryTime},
+			#{materialcode}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE account_inquiry_detail SET 	
+			inquirydetailnum = #{inquirydetailnum},
+			ordernum = #{ordernum},
+			validdate = #{validdate},
+			supplier = #{supplier},
+			materialname = #{materialname},
+			size = #{size},
+			unit = #{unit},
+			unitprice = #{unitprice},
+			requisition = #{requisition},
+			maker = #{maker},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE account_inquiry_detail SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<select id="selectInquiryDetailByOrdernum" resultType="AccountInquiryDetail">
+		SELECT 
+			<include refid="accountInquiryDetailColumns"/>
+		FROM account_inquiry_detail a
+		<include refid="accountInquiryDetailJoins"/>
+		WHERE a.ordernum = #{ordernum}
+	</select>
+	
+</mapper>

@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.erp.dao.AccountPurchaseDao">
+    
+	<sql id="accountPurchaseColumns">
+		a.id AS "id",
+		a.title AS "title",
+		a.ordernum AS "ordernum",
+		a.inquirynum AS "inquirynum",
+		a.maker AS "maker",
+		a.checker AS "checker",
+		a.proc_ins_id AS "procInsId",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="accountPurchaseJoins">
+	</sql>
+    
+	<select id="get" resultType="AccountPurchase">
+		SELECT 
+			<include refid="accountPurchaseColumns"/>
+		FROM account_purchase a
+		<include refid="accountPurchaseJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="AccountPurchase">
+		SELECT 
+			<include refid="accountPurchaseColumns"/>
+		FROM account_purchase a
+		<include refid="accountPurchaseJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="title != null and title != ''">
+				AND a.title LIKE 
+					<if test="dbName == 'oracle'">'%'||#{title}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{title}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{title},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="AccountPurchase">
+		SELECT 
+			<include refid="accountPurchaseColumns"/>
+		FROM account_purchase a
+		<include refid="accountPurchaseJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO account_purchase(
+			id,
+			title,
+			ordernum,
+			inquirynum,
+			maker,
+			checker,
+			proc_ins_id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			del_flag
+		) VALUES (
+			#{id},
+			#{title},
+			#{ordernum},
+			#{inquirynum},
+			#{maker},
+			#{checker},
+			#{procInsId},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE account_purchase SET 	
+			title = #{title},
+			ordernum = #{ordernum},
+			inquirynum = #{inquirynum},
+			maker = #{maker},
+			checker = #{checker},
+			proc_ins_id = #{procInsId},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE account_purchase SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	<select id="getAccountPurchaseTitle" resultType="AccountPurchase">
+	SELECT ap.title as title FROM account_purchase ap WHERE ap.proc_ins_id='end'
+	</select>
+	<!-- 供应商物资采购综合分析表 -->
+	<select id="findTotalComprehensive" resultType="AccuuntPurchaseTotalComprehensive">
+		SELECT ac.contractNum,apd.materialCode,am.materialName,
+		apd.quantity as contractcount,apd.totlemoney as contractmoney,
+		aa.arrival_num AS arrivalcount,(aa.arrival_num*apd.unitprice)as arrivalmoney,
+		aid.quantity as inputcount,(aid.quantity*apd.unitprice)as inputmoney
+		FROM account_contract ac LEFT JOIN account_purchase ap ON
+		ac.purchaseNum=ap.orderNum
+		LEFT JOIN account_purchase_detail apd ON ap.id=apd.parent_Id
+		LEFT JOIN account_arrival aa ON ac.id=aa.contract_id
+		LEFT JOIN account_material am ON apd.materialCode=am.materialNum
+		LEFT JOIN account_inspection ain ON aa.id=ain.arrivalNum
+		LEFT JOIN account_input ai ON ai.inspectionnum=ain.id
+		LEFT JOIN account_input_detail aid ON ai.id=aid.parent_Id
+		LEFT JOIN account_supplier asl ON apd.supplierCode=asl.supplierNum
+		<where>
+			<if test="beginDate != null and beginDate != ''">
+				AND ac.create_date &gt; #{beginDate}
+			</if>
+			<if test="endDate != null and endDate != ''">
+				AND ac.create_date &lt; #{endDate}
+			</if>
+			<if test="suppliercode != null and suppliercode != ''">
+				AND apd.suppliercode LIKE CONCAT('%', #{suppliercode},
+				'%')
+			</if>
+			<if test="supplier != null and supplier != ''">
+				AND asl.supplier LIKE CONCAT('%', #{supplier}, '%')
+			</if>
+		</where>
+	</select>
+	<!-- 供应商到货发票统计表 -->
+	<select id="findTotalInvoice" resultType="AccuuntPurchaseTotalinvoice">
+		SELECT aa.arrival_num as inputcount,ac.money as
+		inputmoney,ap.receiptnum as receiptcode,ap.payAmount as receiptmoney
+		FROM account_arrival aa LEFT JOIN account_contract ac ON
+		aa.contract_id=ac.id LEFT JOIN account_payment ap ON ap.contract=ac.id
+		LEFT JOIN account_purchase a on ac.purchaseNum=a.orderNum
+		LEFT JOIN
+		account_purchase_detail ad
+		ON a.`id` = ad.`parent_Id`
+		LEFT JOIN
+		account_supplier asl ON
+		ad.supplierCode=asl.supplierNum
+		LEFT JOIN
+		account_material am
+		ON ad.materialCode=am.materialNum
+		<where>
+		 <if test="suppliercode != null and suppliercode != ''">
+			  AND ap.suppliercode LIKE CONCAT('%', #{suppliercode}, '%') </if> 
+			<if test="supplier != null and supplier != ''"> 
+			AND ap.supplier LIKE CONCAT('%', #{supplier}, '%') </if> 
+			<if test="beginDate != null and beginDate != ''">
+				AND aa.create_date &gt; #{beginDate} </if>
+			<if test="endDate != null and endDate != ''">
+				AND aa.create_date &lt; #{endDate} </if>
+		</where>
+	</select>
+	<!-- 供应商物资对比分析表 -物资-->
+	<select id="comparative" resultType="AccountSupplierComparative">
+		SELECT
+		apd.materialCode,
+		am.materialName,
+		am.size,
+		apd.quantity,
+		apd.totlemoney as totalMoney,
+		apd.freightFee,
+		apd.unitPrice
+		FROM
+		account_purchase_detail apd LEFT JOIN account_material am ON
+		apd.materialCode=am.materialNum
+		LEFT JOIN account_supplier asl ON
+		apd.supplierCode=asl.supplierNum
+		<where>
+			<if test="suppliercode != null and suppliercode != ''">
+				AND apd.suppliercode LIKE CONCAT('%', #{suppliercode},
+				'%')
+			</if>
+			<if test="supplier != null and supplier != ''">
+				AND asl.supplier LIKE CONCAT('%', #{supplier}, '%')
+			</if>
+			<if test="beginDate != null and beginDate != ''">
+				AND apd.create_date &gt; #{beginDate}
+			</if>
+			<if test="endDate != null and endDate != ''">
+				AND apd.create_date &lt; #{endDate}
+			</if>
+		</where>
+	</select>
+	<!-- 供应商采购物资对比分析表-供应商 -->
+	<select id="supplierComparative" resultType="AccountSupplierComparative">
+      SELECT
+		apd.suppliercode,
+		asl.supplier,
+		apd.quantity,
+		apd.totlemoney as totalMoney,
+		apd.freightFee,
+		apd.unitPrice
+		FROM
+		account_purchase_detail apd LEFT JOIN account_material am ON
+		apd.materialCode=am.materialNum
+		LEFT JOIN account_supplier asl ON
+		apd.supplierCode=asl.supplierNum
+		<where>
+				<if test="materialcode != null and materialcode != ''">
+				AND am.materialcode LIKE CONCAT('%', #{materialcode}, '%')
+			</if>
+			<if test="materialname != null and materialname != ''">
+				AND am.materialname LIKE CONCAT('%', #{materialname}, '%')
+			</if>
+			<if test="size != null and size != ''">
+				AND am.size LIKE CONCAT('%', #{size}, '%')
+			</if>
+			<if test="beginDate != null and beginDate != ''">
+				AND apd.create_date &gt; #{beginDate}
+			</if>
+			<if test="endDate != null and endDate != ''">
+				AND apd.create_date &lt; #{endDate}
+			</if>
+		</where>
+	</select>
+</mapper>

@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.erp.dao.AccountInputDao">
+    
+	<sql id="accountInputColumns">
+		a.id AS "id",
+		a.inputnum AS "inputnum",
+		a.inputdate AS "inputdate",
+		a.category AS "category",
+		a.inspectionnum AS "inspectionnum",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="accountInputJoins">
+	</sql>
+    
+	<select id="get" resultType="AccountInput">
+		SELECT 
+			<include refid="accountInputColumns"/>
+		FROM account_input a
+		<include refid="accountInputJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="AccountInput">
+		SELECT 
+			<include refid="accountInputColumns"/>,d.contractTitle as contracttitle
+		FROM account_input a,account_inspection b,account_arrival c,account_contract d
+		<include refid="accountInputJoins"/>
+		<where>
+		a.inspectionnum=b.id AND b.arrivalNum=c.id AND c.contract_id=d.id and
+			a.del_flag = #{DEL_FLAG_NORMAL} 
+			<if test="contracttitle != null and contracttitle != ''">
+				AND d.contracttitle LIKE CONCAT('%',#{contracttitle},'%' )
+			</if>
+			<if test="beginDate != null and beginDate != ''">
+				AND a.inputdate  &gt;= #{beginDate}
+			</if>
+			
+			<if test="endDate != null and endDate != ''">
+				AND a.inputdate &lt;= #{endDate}
+			</if>
+			 GROUP BY contracttitle
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="AccountInput">
+		SELECT 
+			<include refid="accountInputColumns"/>
+		FROM account_input a
+		<include refid="accountInputJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO account_input(
+			id,
+			inputnum,
+			inputdate,
+			category,
+			inspectionnum,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{inputnum},
+			#{inputdate},
+			#{category},
+			#{inspectionnum},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE account_input SET 	
+			inputnum = #{inputnum},
+			inputdate = #{inputdate},
+			category = #{category},
+			inspectionnum = #{inspectionnum},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE account_input SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	<select id="getAccountInputInfo" resultType="com.thinkgem.jeesite.modules.erp.entity.AccountInputInfo">
+	SELECT c.materialName as materialname,c.size as size, d.arrival_num as receivedquantity
+	,c.remarks as inputremarks,b.id as inspectionnum
+	FROM account_inspection b,account_inspection_detail c
+	,account_arrival d
+	WHERE  b.id=c.parent_Id AND b.arrivalNum=d.id
+	AND (c.`status`='2'or c.`status`='3')
+	ORDER BY b.create_date DESC
+	</select>
+	<select id="getAccountInput" parameterType="String" resultType="int">
+	SELECT COUNT(a.inspectionnum) FROM account_input a WHERE del_flag ='0' and a.inspectionnum=#{inspectionnum}
+	</select>
+	<select id="getAccountInputListInfoBy" parameterType="AccountInput" resultType="com.thinkgem.jeesite.modules.erp.entity.AccountInputInfo">
+	SELECT b.materialname as materialname,b.size as size, b.quantity as quantity,b.warehouse as warehouse,
+    b.location as location,b.remarks as inputremarks ,a.inputdate as inputdate,a.remarks as remarks 
+    FROM account_input a,account_input_detail b WHERE a.inputNum=b.parent_Id 
+    AND a.inputNum=#{inputnum} AND a.inspectionnum=#{inspectionnum}
+	</select>
+	<update id="updateStatus" parameterType="String">
+	UPDATE account_inspection_detail a SET a.`status`='4' WHERE a.parent_Id=#{ordernum}
+	</update>
+	<update id="updateInspectionStatus" parameterType="String">
+	UPDATE account_inspection_detail a SET a.`status`='2' WHERE a.parent_Id=#{ordernum}
+	</update>
+	
+</mapper>
